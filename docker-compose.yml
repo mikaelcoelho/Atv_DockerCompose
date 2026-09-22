@@ -1,0 +1,58 @@
+#version é opcional,não precisa nas novas versões
+
+#Definindo os serviços
+services:
+  db:
+    image: mysql:8.0
+    container_name: db_atividade
+    restart: always #mantém ligado mesmo que desligue por qualquer motivo (reinicia sozinho)
+    environment: #variaveis de ambiente abaixo
+        # coisas para o acesso do mysql
+        MYSQL_ROOT_PASSWORD: root_password
+        MYSQL_DATABASE: meu_projeto_db
+        MYSQL_USER: usuario_projeto
+        MYSQL_PASSWORD: user_password
+    ports: # porta do pc:porta do contâiner
+    - "3306:3306"
+    volumes: # criação do volume no caminho interno do contâiner, de onde ele vai pegar as informações para guardar
+      - mysql_data:/var/lib/mysql
+      #/var/lib/mysql é um padrão da imagem do mysql
+    networks: #criação da rede do mysql
+      - rede-projeto
+
+#serviço do Node
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: node_aplicacao
+    restart: always
+    ports: # porta padrão do node - 3000
+    - "3000:3000"
+    environment: # referenciar o mysql aqui
+      - PORT=3000
+      - DB_HOST=db # referencia o SERVIÇO db
+      - DB_USER=usuario_projeto
+      - DB_PASS=user_password
+      - DB_NAME=meu_projeto_db
+    depends_on: # espera o db inicializar para começar a rodar
+      - db
+    networks:
+      - rede-projeto
+
+    # Redes e volumes compartilhados
+
+networks:
+  rede-projeto:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+
+    
+
+
+  
+
